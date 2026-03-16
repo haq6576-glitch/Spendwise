@@ -1,0 +1,5 @@
+{
+  "name": "SpendWise",
+  "description": "A simple, family-friendly daily expense tracker with custom categories, payment method tracking, and spending analytics.",
+  "requestFramePermissions": []
+}

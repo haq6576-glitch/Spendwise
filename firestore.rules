@@ -1,0 +1,70 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+
+    function incomingData() {
+      return request.resource.data;
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email']) &&
+             data.uid is string &&
+             data.email is string;
+    }
+
+    function isValidExpense(data) {
+      return data.keys().hasAll(['amount', 'category', 'paymentMethod', 'date', 'userId']) &&
+             data.amount is number && data.amount >= 0 &&
+             data.category is string && data.category.size() > 0 && data.category.size() < 100 &&
+             data.paymentMethod in ['Cash', 'UPI', 'Card', 'Other'] &&
+             data.date is string &&
+             data.userId == request.auth.uid;
+    }
+
+    function isValidCategory(data) {
+      return data.keys().hasAll(['name', 'userId']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 50 &&
+             data.userId == request.auth.uid;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+    
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create, update: if isOwner(userId) && isValidUser(incomingData());
+    }
+
+    match /expenses/{expenseId} {
+      allow read: if isDocOwner();
+      allow create: if isAuthenticated() && isValidExpense(incomingData());
+      allow update: if isDocOwner() && isValidExpense(incomingData());
+      allow delete: if isDocOwner();
+    }
+
+    match /categories/{categoryId} {
+      allow read: if isDocOwner() || (isAuthenticated() && resource.data.isDefault == true);
+      allow create: if isAuthenticated() && isValidCategory(incomingData());
+      allow update: if isDocOwner() && isValidCategory(incomingData());
+      allow delete: if isDocOwner() && resource.data.isDefault != true;
+    }
+  }
+}

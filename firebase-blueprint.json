@@ -1,0 +1,57 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and settings",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Expense": {
+      "title": "Expense",
+      "description": "A single expense record",
+      "type": "object",
+      "properties": {
+        "amount": { "type": "number" },
+        "category": { "type": "string" },
+        "paymentMethod": { "type": "string", "enum": ["Cash", "UPI", "Card", "Other"] },
+        "date": { "type": "string", "format": "date-time" },
+        "note": { "type": "string" },
+        "userId": { "type": "string" }
+      },
+      "required": ["amount", "category", "paymentMethod", "date", "userId"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Custom or default expense category",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "icon": { "type": "string" },
+        "userId": { "type": "string" },
+        "isDefault": { "type": "boolean" }
+      },
+      "required": ["name", "userId"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/expenses/{expenseId}": {
+      "schema": "Expense",
+      "description": "Expense records"
+    },
+    "/categories/{categoryId}": {
+      "schema": "Category",
+      "description": "Expense categories"
+    }
+  }
+}
